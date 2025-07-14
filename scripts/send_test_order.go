@@ -211,13 +211,13 @@ func main() {
 		}
 		partition, offset, err := producer.SendMessage(msg)
 		if err != nil {
-			log.Printf("❌ Ошибка отправки заказа %v: %v", order["order_uid"], err)
+			log.Printf(" Ошибка отправки заказа %v: %v", order["order_uid"], err)
 		} else {
-			fmt.Printf("✅ Заказ %v отправлен (partition=%d, offset=%d)\n", order["order_uid"], partition, offset)
+			fmt.Printf(" Заказ %v отправлен (partition=%d, offset=%d)\n", order["order_uid"], partition, offset)
 		}
 		time.Sleep(1 * time.Second)
 	}
 
-	fmt.Println("\n🎉 Все тестовые заказы отправлены!")
+	fmt.Println("\n Все тестовые заказы отправлены!")
 	os.Exit(0)
 }

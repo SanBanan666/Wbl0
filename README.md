@@ -405,5 +405,5 @@ docker-compose up -d --build
 2. Создайте feature branch
 3. Внесите изменения
 4. Добавьте тесты
-5. Создайте Pull Request#   W b l 0  
- 
+5. Создайте Pull Request# 
+Wbl0
