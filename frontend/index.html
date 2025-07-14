@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Service - Поиск заказов</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .search-section {
+            padding: 40px;
+            text-align: center;
+        }
+
+        .search-box {
+            display: flex;
+            max-width: 500px;
+            margin: 0 auto 30px;
+            border-radius: 50px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px 25px;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            background: #f8f9fa;
+        }
+
+        .search-button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .search-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .loading {
+            display: none;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .order-details {
+            padding: 40px;
+            display: none;
+        }
+
+        .order-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .order-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .order-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .order-field {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .order-field label {
+            font-weight: 600;
+            color: #495057;
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .order-field span {
+            color: #212529;
+            font-size: 1em;
+        }
+
+        .items-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .item-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #28a745;
+        }
+
+        .item-card h4 {
+            color: #28a745;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .item-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .item-field {
+            font-size: 0.9em;
+        }
+
+        .item-field label {
+            font-weight: 600;
+            color: #6c757d;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .item-field span {
+            color: #212529;
+        }
+
+        .price-highlight {
+            color: #dc3545;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-202 {
+            background: #28a745;
+            color: white;
+        }
+
+        .example-orders {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+        }
+
+        .example-orders h4 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .example-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .example-order {
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .example-order:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Order Service</h1>
+            <p>Поиск и просмотр информации о заказах</p>
+        </div>
+
+        <div class="search-section">
+            <div class="search-box">
+                <input type="text" id="orderId" class="search-input" placeholder="Введите ID заказа..." />
+                <button onclick="searchOrder()" class="search-button">Найти</button>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Загрузка данных...</p>
+            </div>
+
+            <div class="error" id="error"></div>
+
+            <div class="example-orders">
+                <h4>Примеры ID заказов для тестирования:</h4>
+                <div class="example-list">
+                    <div class="example-order" onclick="setOrderId('b563feb7b2b84b6test')">b563feb7b2b84b6test</div>
+                    <div class="example-order" onclick="setOrderId('test-order-1')">test-order-1</div>
+                    <div class="example-order" onclick="setOrderId('test-order-2')">test-order-2</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="order-details" id="orderDetails">
+            <!-- Здесь будет отображаться информация о заказе -->
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8081';
+
+        function setOrderId(orderId) {
+            document.getElementById('orderId').value = orderId;
+            searchOrder();
+        }
+
+        async function searchOrder() {
+            const orderId = document.getElementById('orderId').value.trim();
+            
+            if (!orderId) {
+                showError('Пожалуйста, введите ID заказа');
+                return;
+            }
+
+            // Скрываем предыдущие результаты
+            hideError();
+            hideOrderDetails();
+            showLoading();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/order/${orderId}`);
+                
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error(`Заказ с ID "${orderId}" не найден`);
+                    } else {
+                        throw new Error(`Ошибка сервера: ${response.status}`);
+                    }
+                }
+
+                const data = await response.json();
+                displayOrder(data.order);
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function displayOrder(order) {
+            const orderDetails = document.getElementById('orderDetails');
+            
+            orderDetails.innerHTML = `
+                <div class="order-section">
+                    <h3>📋 Основная информация</h3>
+                    <div class="order-grid">
+                        <div class="order-field">
+                            <label>ID заказа</label>
+                            <span>${order.order_uid}</span>
+                        </div>
+                        <div class="order-field">
+                            <label>Трек номер</label>
+                            <span>${order.track_number}</span>
+                        </div>
+                        <div class="order-field">
+                            <label>Вход</label>
+                            <span>${order.entry}</span>
+                        </div>
+                        <div class="order-field">
+                            <label>Локаль</label>
+                            <span>${order.locale}</span>
+                        </div>
+                        <div class="order-field">
+                            <label>ID клиента</label>
+                            <span>${order.customer_id}</span>
+                        </div>
+                        <div class="order-field">
+                            <label>Служба доставки</label>
+                            <span>${order.delivery_service}</span>
+                        </div>
+                        <div class="order-field">
+                            <label>Дата создания</label>
+                            <span>${new Date(order.date_created).toLocaleString('ru-RU')}</span>
+                        </div>
+                        <div class="order-field">
+                            <label>Shard Key</label>
+                            <span>${order.shard_key}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-section">
+                    <h3>🚚 Информация о доставке</h3>
+                    <div class="order-grid">
+                        <div class="order-field">
+                            <label>Имя получателя</label>
+                            <span>${order.delivery.name}</span>
+                        </div>
+                        <div class="order-field">
+                            <label>Телефон</label>
+                            <span>${order.delivery.phone}</span>
+                        </div>
+                        <div class="order-field">
+                            <label>Email</label>
+                            <span>${order.delivery.email}</span>
+                        </div>
+                        <div class="order-field">
+                            <label>Город</label>
+                            <span>${order.delivery.city}</span>
+                        </div>
+                        <div class="order-field">
+                            <label>Регион</label>
+                            <span>${order.delivery.region}</span>
+                        </div>
+                        <div class="order-field">
+                            <label>Индекс</label>
+                            <span>${order.delivery.zip}</span>
+                        </div>
+                        <div class="order-field" style="grid-column: 1 / -1;">
+                            <label>Адрес</label>
+                            <span>${order.delivery.address}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-section">
+                    <h3>💳 Информация об оплате</h3>
+                    <div class="order-grid">
+                        <div class="order-field">
+                            <label>Транзакция</label>
+                            <span>${order.payment.transaction}</span>
+                        </div>
+                        <div class="order-field">
+                            <label>Валюта</label>
+                            <span>${order.payment.currency}</span>
+                        </div>
+                        <div class="order-field">
+                            <label>Провайдер</label>
+                            <span>${order.payment.provider}</span>
+                        </div>
+                        <div class="order-field">
+                            <label>Банк</label>
+                            <span>${order.payment.bank}</span>
+                        </div>
+                        <div class="order-field">
+                            <label>Сумма</label>
+                            <span class="price-highlight">${order.payment.amount} ${order.payment.currency}</span>
+                        </div>
+                        <div class="order-field">
+                            <label>Стоимость доставки</label>
+                            <span>${order.payment.delivery_cost} ${order.payment.currency}</span>
+                        </div>
+                        <div class="order-field">
+                            <label>Сумма товаров</label>
+                            <span>${order.payment.goods_total} ${order.payment.currency}</span>
+                        </div>
+                        <div class="order-field">
+                            <label>Комиссия</label>
+                            <span>${order.payment.custom_fee} ${order.payment.currency}</span>
+                        </div>
+                        <div class="order-field">
+                            <label>Дата платежа</label>
+                            <span>${new Date(order.payment.payment_dt * 1000).toLocaleString('ru-RU')}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-section">
+                    <h3>📦 Товары (${order.items.length})</h3>
+                    <div class="items-list">
+                        ${order.items.map(item => `
+                            <div class="item-card">
+                                <h4>${item.name}</h4>
+                                <div class="item-grid">
+                                    <div class="item-field">
+                                        <label>Бренд</label>
+                                        <span>${item.brand}</span>
+                                    </div>
+                                    <div class="item-field">
+                                        <label>Цена</label>
+                                        <span class="price-highlight">${item.price} ${order.payment.currency}</span>
+                                    </div>
+                                    <div class="item-field">
+                                        <label>Скидка</label>
+                                        <span>${item.sale}%</span>
+                                    </div>
+                                    <div class="item-field">
+                                        <label>Итоговая цена</label>
+                                        <span class="price-highlight">${item.total_price} ${order.payment.currency}</span>
+                                    </div>
+                                    <div class="item-field">
+                                        <label>Размер</label>
+                                        <span>${item.size}</span>
+                                    </div>
+                                    <div class="item-field">
+                                        <label>Статус</label>
+                                        <span class="status-badge status-${item.status}">${item.status}</span>
+                                    </div>
+                                    <div class="item-field">
+                                        <label>ID товара</label>
+                                        <span>${item.nm_id}</span>
+                                    </div>
+                                    <div class="item-field">
+                                        <label>Chrt ID</label>
+                                        <span>${item.chrt_id}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            showOrderDetails();
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function showOrderDetails() {
+            document.getElementById('orderDetails').style.display = 'block';
+        }
+
+        function hideOrderDetails() {
+            document.getElementById('orderDetails').style.display = 'none';
+        }
+
+        // Обработка нажатия Enter в поле поиска
+        document.getElementById('orderId').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchOrder();
+            }
+        });
+    </script>
+</body>
+</html> 
